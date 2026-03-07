@@ -2,6 +2,54 @@
 
 Terraform module for deploying Azure Cosmos DB with multiple API support (NoSQL, MongoDB), analytical store, multi-region writes, and private endpoint.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Account["Cosmos DB Account"]
+        style Account fill:#0078D4,color:#fff
+        Consistency["Consistency Level"]
+        MultiRegion["Multi-Region Writes"]
+        Backup["Backup Policy"]
+    end
+
+    subgraph Databases["Databases & Containers"]
+        style Databases fill:#3F8624,color:#fff
+        SQLDB["SQL Databases"]
+        SQLContainers["SQL Containers"]
+        MongoDB["MongoDB Databases"]
+        MongoCollections["MongoDB Collections"]
+        SQLDB --> SQLContainers
+        MongoDB --> MongoCollections
+    end
+
+    subgraph Networking["Private Networking"]
+        style Networking fill:#DD344C,color:#fff
+        PrivateEndpoint["Private Endpoint"]
+        DNSZone["Private DNS Zone"]
+        VNetRules["VNet Rules / IP Filtering"]
+    end
+
+    subgraph Security["Security & Monitoring"]
+        style Security fill:#8C4FFF,color:#fff
+        CMK["Customer-Managed Key"]
+        Diagnostics["Diagnostic Settings"]
+    end
+
+    subgraph Replication["Geo-Replication"]
+        style Replication fill:#FF9900,color:#fff
+        Region1["Primary Region"]
+        Region2["Secondary Region(s)"]
+        Region1 --> Region2
+    end
+
+    Account --> Databases
+    Account --> Replication
+    Account --> Networking
+    Account --> Security
+    PrivateEndpoint --> DNSZone
+```
+
 ## Features
 
 - Azure Cosmos DB account with NoSQL (SQL API) and MongoDB API support
