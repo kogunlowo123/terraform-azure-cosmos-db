@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>terraform-azure-cosmos-db | Architecture</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0c0b;color:#f5f2eb;font-family:'SF Mono','Cascadia Code','Fira Code',monospace;line-height:1.7;padding:0}
+a{color:#c8420a;text-decoration:none}a:hover{text-decoration:underline}
+.container{max-width:1200px;margin:0 auto;padding:2rem}
+header{background:linear-gradient(135deg,#0b0c0b 0%,#1a1b1a 100%);border-bottom:2px solid #c8420a;padding:2rem 0}
+header .container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+h1{font-size:1.8rem;color:#f5f2eb}h2{font-size:1.4rem;color:#c8420a;margin:2rem 0 1rem;padding-bottom:0.5rem;border-bottom:1px solid #2a2b2a}
+.badge{background:#0078D4;color:#fff;padding:0.3rem 1rem;border-radius:4px;font-size:0.85rem;font-weight:600;letter-spacing:0.5px}.badge-type{background:#c8420a}
+.summary{background:#1a1b1a;border:1px solid #2a2b2a;border-radius:8px;padding:1.5rem;margin:1.5rem 0;font-size:0.95rem;line-height:1.8}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1.5rem 0}
+.card{background:#1a1b1a;border:1px solid #2a2b2a;border-radius:8px;padding:1.25rem;transition:border-color 0.2s}.card:hover{border-color:#c8420a}
+.card-title{font-size:0.95rem;color:#c8420a;margin-bottom:0.5rem}.card-value{font-size:1.3rem;color:#f5f2eb;font-weight:700}.card-desc{font-size:0.8rem;color:#888;margin-top:0.25rem}
+.arch-diagram{background:#1a1b1a;border:1px solid #2a2b2a;border-radius:8px;padding:2rem;margin:1.5rem 0;overflow-x:auto}
+.flow{display:flex;flex-direction:column;align-items:center;gap:1rem}
+.flow-row{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;align-items:center}
+.flow-box{background:#0b0c0b;border:2px solid #c8420a;border-radius:8px;padding:0.75rem 1.25rem;text-align:center;font-size:0.85rem;min-width:140px}
+.flow-box.primary{border-color:#0078D4;background:#0a1628}.flow-box.secondary{border-color:#3F8624;background:#0a1a0a}.flow-box.accent{border-color:#c8420a;background:#1a0f0a}.flow-box.purple{border-color:#8C4FFF;background:#140a28}.flow-box.warning{border-color:#FF9900;background:#1a1400}
+.flow-arrow{color:#555;font-size:1.5rem}.flow-label{font-size:0.7rem;color:#888;margin-top:0.2rem}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.85rem}
+th{background:#1a1b1a;color:#c8420a;text-align:left;padding:0.75rem;border:1px solid #2a2b2a;font-weight:600}
+td{padding:0.75rem;border:1px solid #2a2b2a;color:#f5f2eb}tr:nth-child(even){background:#111211}tr:hover{background:#1a1b1a}
+.check{color:#3F8624}.x{color:#DD344C}
+.checklist{list-style:none;padding:0}.checklist li{padding:0.4rem 0;padding-left:1.5rem;position:relative;font-size:0.9rem}.checklist li::before{content:"[  ]";position:absolute;left:0;color:#c8420a;font-size:0.85rem}
+code{background:#1a1b1a;padding:0.15rem 0.4rem;border-radius:3px;font-size:0.85rem;color:#c8420a}
+pre{background:#1a1b1a;border:1px solid #2a2b2a;border-radius:8px;padding:1.25rem;overflow-x:auto;font-size:0.85rem;margin:1rem 0}
+.data-flow-step{display:flex;align-items:flex-start;gap:1rem;margin:0.75rem 0}.step-num{background:#c8420a;color:#fff;min-width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0}.step-text{font-size:0.9rem}
+footer{background:#1a1b1a;border-top:2px solid #c8420a;padding:2rem 0;margin-top:3rem;text-align:center;font-size:0.8rem;color:#555}
+.section{margin-bottom:2rem}
+</style>
+</head>
+<body>
+<header>
+<div class="container">
+<div>
+<h1>terraform-azure-cosmos-db</h1>
+<p style="color:#888;margin-top:0.3rem;font-size:0.9rem">Azure Cosmos DB Multi-API Database Module</p>
+</div>
+<div>
+<span class="badge">Azure</span>
+<span class="badge badge-type">Database</span>
+</div>
+</div>
+</header>
+
+<div class="container">
+
+<section class="section">
+<h2>Executive Summary</h2>
+<div class="summary">
+Terraform module for deploying Azure Cosmos DB accounts with support for both NoSQL (SQL API) and MongoDB API. Features multi-region geo-replication with automatic failover, multi-region writes, configurable consistency levels (Strong to Eventual), autoscale throughput, analytical storage (Synapse Link), SQL databases with containers (partition keys, unique keys, indexing policies, TTL), MongoDB databases with collections (shard keys, indexes), private endpoints with DNS zone integration, customer-managed key encryption (CMK), and configurable backup policies (Periodic or Continuous).
+</div>
+</section>
+
+<section class="section">
+<h2>Overview Cards</h2>
+<div class="cards">
+<div class="card"><div class="card-title">Resources</div><div class="card-value">7 types</div><div class="card-desc">Account, SQL/Mongo DBs, Containers, PE</div></div>
+<div class="card"><div class="card-title">Variables</div><div class="card-value">24</div><div class="card-desc">3 required, 21 optional</div></div>
+<div class="card"><div class="card-title">Outputs</div><div class="card-value">16</div><div class="card-desc">Endpoints, keys, IDs, connection strings</div></div>
+<div class="card"><div class="card-title">APIs</div><div class="card-value">SQL + MongoDB</div><div class="card-desc">GlobalDocumentDB or MongoDB kind</div></div>
+<div class="card"><div class="card-title">Consistency</div><div class="card-value">5 levels</div><div class="card-desc">Strong to Eventual</div></div>
+<div class="card"><div class="card-title">Replication</div><div class="card-value">Multi-region</div><div class="card-desc">Automatic failover, multi-write</div></div>
+</div>
+</section>
+
+<section class="section">
+<h2>Architecture Diagram</h2>
+<div class="arch-diagram">
+<div class="flow">
+<div class="flow-row">
+<div class="flow-box primary">Cosmos DB Account<div class="flow-label">GlobalDocumentDB or MongoDB</div></div>
+</div>
+<div class="flow-arrow">&#x2193;</div>
+<div class="flow-row">
+<div class="flow-box warning">Consistency Policy<div class="flow-label">Session / Strong / Bounded / Eventual</div></div>
+<div class="flow-box warning">Backup Policy<div class="flow-label">Periodic (240m/8h) or Continuous</div></div>
+</div>
+<div class="flow-arrow">&#x2193;</div>
+<div class="flow-row">
+<div class="flow-box secondary">SQL Database(s)<div class="flow-label">Autoscale throughput</div></div>
+<div class="flow-box secondary">MongoDB Database(s)<div class="flow-label">Autoscale throughput</div></div>
+</div>
+<div class="flow-arrow">&#x2193;</div>
+<div class="flow-row">
+<div class="flow-box secondary">SQL Containers<div class="flow-label">Partition keys, indexing, TTL, unique keys</div></div>
+<div class="flow-box secondary">Mongo Collections<div class="flow-label">Shard keys, indexes, TTL</div></div>
+</div>
+<div class="flow-arrow">&#x2193;</div>
+<div class="flow-row">
+<div class="flow-box warning">Primary Region<div class="flow-label">failover_priority: 0</div></div>
+<div class="flow-box warning">Secondary Region(s)<div class="flow-label">Zone-redundant replicas</div></div>
+</div>
+<div class="flow-arrow">&#x2193;</div>
+<div class="flow-row">
+<div class="flow-box purple">Private Endpoint<div class="flow-label">SQL or MongoDB subresource</div></div>
+<div class="flow-box purple">Private DNS Zone<div class="flow-label">Name resolution</div></div>
+<div class="flow-box purple">CMK Encryption<div class="flow-label">Key Vault key</div></div>
+</div>
+<div class="flow-arrow">&#x2193;</div>
+<div class="flow-row">
+<div class="flow-box accent">Diagnostic Settings<div class="flow-label">DataPlane, QueryRuntime, Partition stats</div></div>
+<div class="flow-box accent">Analytical Storage<div class="flow-label">Synapse Link</div></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<h2>Component Breakdown</h2>
+<table>
+<tr><th>Component</th><th>Resource Type</th><th>Purpose</th><th>Configuration</th></tr>
+<tr><td>Cosmos DB Account</td><td><code>azurerm_cosmosdb_account</code></td><td>Global database account</td><td>Auto-failover, consistency, backup, capabilities</td></tr>
+<tr><td>SQL Databases</td><td><code>azurerm_cosmosdb_sql_database</code></td><td>NoSQL API databases</td><td>for_each, throughput or autoscale</td></tr>
+<tr><td>SQL Containers</td><td><code>azurerm_cosmosdb_sql_container</code></td><td>SQL API data containers</td><td>Partition key, unique keys, indexing policy, TTL</td></tr>
+<tr><td>MongoDB Databases</td><td><code>azurerm_cosmosdb_mongo_database</code></td><td>MongoDB API databases</td><td>for_each, throughput or autoscale</td></tr>
+<tr><td>MongoDB Collections</td><td><code>azurerm_cosmosdb_mongo_collection</code></td><td>MongoDB collections</td><td>Shard key, indexes, TTL</td></tr>
+<tr><td>Private Endpoint</td><td><code>azurerm_private_endpoint</code></td><td>Network isolation</td><td>SQL or MongoDB subresource, DNS zone group</td></tr>
+<tr><td>Diagnostics</td><td><code>azurerm_monitor_diagnostic_setting</code></td><td>Performance monitoring</td><td>DataPlane, QueryRuntime, Partition stats</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Data Flow</h2>
+<div class="data-flow-step"><div class="step-num">1</div><div class="step-text">Application connects to Cosmos DB account endpoint (public or via private endpoint).</div></div>
+<div class="data-flow-step"><div class="step-num">2</div><div class="step-text">Requests are routed to the appropriate database (SQL or MongoDB API).</div></div>
+<div class="data-flow-step"><div class="step-num">3</div><div class="step-text">Data is partitioned across containers/collections using partition/shard keys.</div></div>
+<div class="data-flow-step"><div class="step-num">4</div><div class="step-text">Consistency policy governs read consistency across replicas.</div></div>
+<div class="data-flow-step"><div class="step-num">5</div><div class="step-text">Data is replicated to secondary regions with configurable failover priority.</div></div>
+<div class="data-flow-step"><div class="step-num">6</div><div class="step-text">Analytical storage feeds data to Azure Synapse for analytics workloads.</div></div>
+<div class="data-flow-step"><div class="step-num">7</div><div class="step-text">Backup policy creates periodic snapshots or continuous change feed.</div></div>
+</section>
+
+<section class="section">
+<h2>Security Controls</h2>
+<table>
+<tr><th>Control</th><th>Implementation</th><th>Default</th></tr>
+<tr><td>Private Endpoint</td><td>SQL or MongoDB subresource with DNS zone</td><td>Enabled</td></tr>
+<tr><td>VNet Rules</td><td>Restrict access to specific subnets</td><td>Optional</td></tr>
+<tr><td>IP Filtering</td><td>Comma-separated IP ranges</td><td>Optional</td></tr>
+<tr><td>CMK Encryption</td><td>Customer-managed keys via Key Vault</td><td>Disabled</td></tr>
+<tr><td>Auto Failover</td><td>Automatic failover between regions</td><td>Enabled</td></tr>
+<tr><td>Backup</td><td>Periodic (240m/8h) or Continuous</td><td>Periodic</td></tr>
+<tr><td>Access Keys</td><td>Primary/secondary keys (sensitive outputs)</td><td>Managed by Azure</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Industry Adaptation</h2>
+<table>
+<tr><th>Capability</th><th>Healthcare</th><th>Finance</th><th>Government</th><th>Retail</th><th>SaaS</th></tr>
+<tr><td>Multi-Region</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+<tr><td>CMK Encryption</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td>Optional</td><td>Optional</td></tr>
+<tr><td>Private Endpoint</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td>Optional</td><td>Optional</td></tr>
+<tr><td>Strong Consistency</td><td>Optional</td><td class="check">&#10003;</td><td>Optional</td><td>Optional</td><td>Optional</td></tr>
+<tr><td>Continuous Backup</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td>Optional</td><td class="check">&#10003;</td></tr>
+<tr><td>Analytical Storage</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td>Optional</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Production Readiness Checklist</h2>
+<ul class="checklist">
+<li>Configure multi-region geo-replication</li>
+<li>Enable automatic failover</li>
+<li>Choose appropriate consistency level</li>
+<li>Set up private endpoint with DNS zone</li>
+<li>Enable autoscale throughput for variable workloads</li>
+<li>Configure backup policy (Continuous for critical data)</li>
+<li>Enable CMK encryption for regulated workloads</li>
+<li>Design partition keys for even distribution</li>
+<li>Configure indexing policies for query patterns</li>
+<li>Set TTL for data lifecycle management</li>
+<li>Enable diagnostic settings for monitoring</li>
+</ul>
+</section>
+
+<section class="section">
+<h2>Configuration Reference</h2>
+<table>
+<tr><th>Variable</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>name</code></td><td>string</td><td>required</td><td>Cosmos DB account name</td></tr>
+<tr><td><code>kind</code></td><td>string</td><td>GlobalDocumentDB</td><td>API kind (SQL or MongoDB)</td></tr>
+<tr><td><code>consistency_policy</code></td><td>object</td><td>Session</td><td>Consistency level</td></tr>
+<tr><td><code>geo_locations</code></td><td>list(object)</td><td>[]</td><td>Multi-region replication</td></tr>
+<tr><td><code>sql_databases</code></td><td>map(object)</td><td>{}</td><td>SQL databases and containers</td></tr>
+<tr><td><code>mongodb_databases</code></td><td>map(object)</td><td>{}</td><td>MongoDB databases and collections</td></tr>
+<tr><td><code>backup_type</code></td><td>string</td><td>Periodic</td><td>Periodic or Continuous</td></tr>
+<tr><td><code>enable_cmk</code></td><td>bool</td><td>false</td><td>Customer-managed key encryption</td></tr>
+<tr><td><code>enable_private_endpoint</code></td><td>bool</td><td>true</td><td>Create private endpoint</td></tr>
+<tr><td><code>enable_analytical_storage</code></td><td>bool</td><td>false</td><td>Enable Synapse Link</td></tr>
+</table>
+</section>
+
+<section class="section">
+<h2>Deployment</h2>
+<pre>
+terraform init
+terraform plan -out=tfplan
+terraform apply tfplan
+
+# Verify account
+az cosmosdb show \
+  --name my-cosmos-account \
+  --resource-group my-resource-group \
+  --query "{endpoint:documentEndpoint,kind:kind}" -o table
+</pre>
+</section>
+
+<section class="section">
+<h2>Links</h2>
+<p>
+<a href="https://learn.microsoft.com/en-us/azure/cosmos-db/introduction">Azure Cosmos DB Documentation</a> |
+<a href="https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account">Terraform Cosmos DB Resource</a> |
+<a href="../README.md">Module README</a> |
+<a href="../examples/">Examples</a>
+</p>
+</section>
+
+</div>
+
+<footer>
+<div class="container">
+<p>terraform-azure-cosmos-db Architecture Document</p>
+<p>Generated on 2026-03-15 | Terraform Azure Module</p>
+</div>
+</footer>
+</body>
+</html>
