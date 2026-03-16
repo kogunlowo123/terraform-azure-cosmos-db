@@ -48,28 +48,28 @@ output "cosmosdb_account_connection_strings" {
 }
 
 output "sql_database_ids" {
-  description = "A map of SQL database IDs."
+  description = "Map of SQL database names to their IDs."
   value = {
     for key, db in azurerm_cosmosdb_sql_database.this : key => db.id
   }
 }
 
 output "sql_container_ids" {
-  description = "A map of SQL container IDs."
+  description = "Map of SQL container keys to their IDs."
   value = {
     for key, container in azurerm_cosmosdb_sql_container.this : key => container.id
   }
 }
 
 output "mongodb_database_ids" {
-  description = "A map of MongoDB database IDs."
+  description = "Map of MongoDB database names to their IDs."
   value = {
     for key, db in azurerm_cosmosdb_mongo_database.this : key => db.id
   }
 }
 
 output "mongodb_collection_ids" {
-  description = "A map of MongoDB collection IDs."
+  description = "Map of MongoDB collection keys to their IDs."
   value = {
     for key, collection in azurerm_cosmosdb_mongo_collection.this : key => collection.id
   }

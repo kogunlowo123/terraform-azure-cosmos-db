@@ -1,26 +1,26 @@
 variable "name" {
-  description = "The name of the Cosmos DB account."
+  description = "Name of the Cosmos DB account."
   type        = string
 }
 
 variable "resource_group_name" {
-  description = "The name of the resource group in which to create the Cosmos DB account."
+  description = "Name of the resource group for the Cosmos DB account."
   type        = string
 }
 
 variable "location" {
-  description = "The Azure region where the Cosmos DB account will be created."
+  description = "Azure region for the Cosmos DB account."
   type        = string
 }
 
 variable "offer_type" {
-  description = "The offer type for the Cosmos DB account."
+  description = "Offer type for the Cosmos DB account."
   type        = string
   default     = "Standard"
 }
 
 variable "kind" {
-  description = "The kind of Cosmos DB account (GlobalDocumentDB or MongoDB)."
+  description = "Kind of Cosmos DB account (GlobalDocumentDB or MongoDB)."
   type        = string
   default     = "GlobalDocumentDB"
 
@@ -31,11 +31,11 @@ variable "kind" {
 }
 
 variable "consistency_policy" {
-  description = "The consistency policy for the Cosmos DB account."
+  description = "Consistency policy for the Cosmos DB account."
   type = object({
-    level           = string
-    max_interval    = optional(number, 5)
-    max_staleness   = optional(number, 100)
+    level         = string
+    max_interval  = optional(number, 5)
+    max_staleness = optional(number, 100)
   })
   default = {
     level         = "Session"
@@ -50,7 +50,7 @@ variable "consistency_policy" {
 }
 
 variable "geo_locations" {
-  description = "A list of geo-locations for the Cosmos DB account."
+  description = "List of geo-locations for the Cosmos DB account."
   type = list(object({
     location          = string
     failover_priority = number
@@ -60,54 +60,54 @@ variable "geo_locations" {
 }
 
 variable "enable_automatic_failover" {
-  description = "Whether to enable automatic failover for the Cosmos DB account."
+  description = "Enable automatic failover for the Cosmos DB account."
   type        = bool
   default     = true
 }
 
 variable "enable_multi_region_writes" {
-  description = "Whether to enable multi-region writes for the Cosmos DB account."
+  description = "Enable multi-region writes for the Cosmos DB account."
   type        = bool
   default     = false
 }
 
 variable "capabilities" {
-  description = "A list of capabilities to enable on the Cosmos DB account."
+  description = "List of capabilities to enable on the Cosmos DB account."
   type        = list(string)
   default     = []
 }
 
 variable "virtual_network_rules" {
-  description = "A list of virtual network subnet IDs to associate with the Cosmos DB account."
+  description = "List of virtual network subnet IDs for the Cosmos DB account."
   type        = list(string)
   default     = []
 }
 
 variable "ip_range_filter" {
-  description = "A comma-separated list of IP addresses or IP address ranges that are allowed to access the Cosmos DB account."
+  description = "Comma-separated list of IP addresses or ranges allowed to access the account."
   type        = string
   default     = null
 }
 
 variable "enable_free_tier" {
-  description = "Whether to enable the free tier for the Cosmos DB account."
+  description = "Enable the free tier for the Cosmos DB account."
   type        = bool
   default     = false
 }
 
 variable "sql_databases" {
-  description = "A map of SQL databases to create in the Cosmos DB account."
+  description = "Map of SQL databases to create in the Cosmos DB account."
   type = map(object({
     throughput     = optional(number)
     max_throughput = optional(number)
     containers = optional(map(object({
-      partition_key_path  = string
+      partition_key_path    = string
       partition_key_version = optional(number, 2)
-      throughput          = optional(number)
-      max_throughput      = optional(number)
-      default_ttl         = optional(number)
-      analytical_ttl      = optional(number)
-      unique_keys         = optional(list(list(string)), [])
+      throughput            = optional(number)
+      max_throughput        = optional(number)
+      default_ttl           = optional(number)
+      analytical_ttl        = optional(number)
+      unique_keys           = optional(list(list(string)), [])
       indexing_policy = optional(object({
         indexing_mode  = optional(string, "consistent")
         included_paths = optional(list(string), ["/*"])
@@ -119,7 +119,7 @@ variable "sql_databases" {
 }
 
 variable "mongodb_databases" {
-  description = "A map of MongoDB databases to create in the Cosmos DB account."
+  description = "Map of MongoDB databases to create in the Cosmos DB account."
   type = map(object({
     throughput     = optional(number)
     max_throughput = optional(number)
@@ -139,19 +139,19 @@ variable "mongodb_databases" {
 }
 
 variable "enable_analytical_storage" {
-  description = "Whether to enable analytical storage on the Cosmos DB account."
+  description = "Enable analytical storage on the Cosmos DB account."
   type        = bool
   default     = false
 }
 
 variable "analytical_storage_ttl" {
-  description = "The default analytical storage TTL in seconds. Use -1 for infinite retention."
+  description = "Default analytical storage TTL in seconds (-1 for infinite)."
   type        = number
   default     = null
 }
 
 variable "backup_type" {
-  description = "The type of backup - Periodic or Continuous."
+  description = "Backup type for the Cosmos DB account (Periodic or Continuous)."
   type        = string
   default     = "Periodic"
 
@@ -162,49 +162,55 @@ variable "backup_type" {
 }
 
 variable "backup_interval" {
-  description = "The interval in minutes between two backups (only for Periodic backup type)."
+  description = "Interval in minutes between backups (Periodic backup type only)."
   type        = number
   default     = 240
 }
 
 variable "backup_retention" {
-  description = "The time in hours that each backup is retained (only for Periodic backup type)."
+  description = "Retention in hours for each backup (Periodic backup type only)."
   type        = number
   default     = 8
 }
 
 variable "enable_cmk" {
-  description = "Whether to enable customer-managed key encryption."
+  description = "Enable customer-managed key encryption."
   type        = bool
   default     = false
 }
 
 variable "key_vault_key_id" {
-  description = "The Key Vault key URI for customer-managed key encryption."
+  description = "Key Vault key URI for customer-managed key encryption."
   type        = string
   default     = null
 }
 
 variable "enable_private_endpoint" {
-  description = "Whether to create a private endpoint for the Cosmos DB account."
+  description = "Create a private endpoint for the Cosmos DB account."
   type        = bool
   default     = true
 }
 
 variable "private_endpoint_subnet_id" {
-  description = "The subnet ID for the private endpoint."
+  description = "Subnet ID for the private endpoint."
   type        = string
   default     = null
 }
 
 variable "private_dns_zone_id" {
-  description = "The private DNS zone ID for the private endpoint."
+  description = "Private DNS zone ID for the private endpoint."
+  type        = string
+  default     = null
+}
+
+variable "log_analytics_workspace_id" {
+  description = "Log Analytics workspace ID for diagnostic settings."
   type        = string
   default     = null
 }
 
 variable "tags" {
-  description = "A map of tags to assign to the resources."
+  description = "Tags to apply to all resources."
   type        = map(string)
   default     = {}
 }

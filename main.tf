@@ -1,6 +1,3 @@
-#--------------------------------------------------------------
-# Azure Cosmos DB Account
-#--------------------------------------------------------------
 resource "azurerm_cosmosdb_account" "this" {
   name                = var.name
   location            = var.location
@@ -8,10 +5,10 @@ resource "azurerm_cosmosdb_account" "this" {
   offer_type          = var.offer_type
   kind                = var.kind
 
-  enable_automatic_failover     = var.enable_automatic_failover
-  enable_multiple_write_locations = var.enable_multi_region_writes
-  enable_free_tier              = var.enable_free_tier
-  ip_range_filter               = var.ip_range_filter
+  enable_automatic_failover        = var.enable_automatic_failover
+  enable_multiple_write_locations  = var.enable_multi_region_writes
+  enable_free_tier                 = var.enable_free_tier
+  ip_range_filter                  = var.ip_range_filter
 
   consistency_policy {
     consistency_level       = var.consistency_policy.level
@@ -20,7 +17,13 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 
   dynamic "geo_location" {
-    for_each = local.geo_locations
+    for_each = length(var.geo_locations) > 0 ? var.geo_locations : [
+      {
+        location          = var.location
+        failover_priority = 0
+        zone_redundant    = false
+      }
+    ]
     content {
       location          = geo_location.value.location
       failover_priority = geo_location.value.failover_priority
@@ -67,9 +70,6 @@ resource "azurerm_cosmosdb_account" "this" {
   tags = var.tags
 }
 
-#--------------------------------------------------------------
-# SQL Databases
-#--------------------------------------------------------------
 resource "azurerm_cosmosdb_sql_database" "this" {
   for_each = var.sql_databases
 
@@ -86,16 +86,31 @@ resource "azurerm_cosmosdb_sql_database" "this" {
   }
 }
 
-#--------------------------------------------------------------
-# SQL Containers
-#--------------------------------------------------------------
 resource "azurerm_cosmosdb_sql_container" "this" {
-  for_each = local.sql_containers_map
+  for_each = {
+    for item in flatten([
+      for db_key, db in var.sql_databases : [
+        for container_key, container in(db.containers != null ? db.containers : {}) : {
+          key                   = "${db_key}-${container_key}"
+          db_key                = db_key
+          container_key         = container_key
+          partition_key_path    = container.partition_key_path
+          partition_key_version = container.partition_key_version
+          throughput            = container.throughput
+          max_throughput        = container.max_throughput
+          default_ttl           = container.default_ttl
+          analytical_ttl        = container.analytical_ttl
+          unique_keys           = container.unique_keys
+          indexing_policy       = container.indexing_policy
+        }
+      ]
+    ]) : item.key => item
+  }
 
-  name                = each.value.container_key
-  resource_group_name = var.resource_group_name
-  account_name        = azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_sql_database.this[each.value.db_key].name
+  name                  = each.value.container_key
+  resource_group_name   = var.resource_group_name
+  account_name          = azurerm_cosmosdb_account.this.name
+  database_name         = azurerm_cosmosdb_sql_database.this[each.value.db_key].name
 
   partition_key_path    = each.value.partition_key_path
   partition_key_version = each.value.partition_key_version
@@ -139,9 +154,6 @@ resource "azurerm_cosmosdb_sql_container" "this" {
   }
 }
 
-#--------------------------------------------------------------
-# MongoDB Databases
-#--------------------------------------------------------------
 resource "azurerm_cosmosdb_mongo_database" "this" {
   for_each = var.mongodb_databases
 
@@ -158,20 +170,33 @@ resource "azurerm_cosmosdb_mongo_database" "this" {
   }
 }
 
-#--------------------------------------------------------------
-# MongoDB Collections
-#--------------------------------------------------------------
 resource "azurerm_cosmosdb_mongo_collection" "this" {
-  for_each = local.mongo_collections_map
+  for_each = {
+    for item in flatten([
+      for db_key, db in var.mongodb_databases : [
+        for collection_key, collection in(db.collections != null ? db.collections : {}) : {
+          key            = "${db_key}-${collection_key}"
+          db_key         = db_key
+          collection_key = collection_key
+          shard_key      = collection.shard_key
+          throughput     = collection.throughput
+          max_throughput = collection.max_throughput
+          default_ttl    = collection.default_ttl
+          analytical_ttl = collection.analytical_ttl
+          indexes        = collection.indexes
+        }
+      ]
+    ]) : item.key => item
+  }
 
   name                = each.value.collection_key
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
   database_name       = azurerm_cosmosdb_mongo_database.this[each.value.db_key].name
 
-  shard_key          = each.value.shard_key
-  throughput         = each.value.max_throughput == null ? each.value.throughput : null
-  default_ttl_seconds = each.value.default_ttl
+  shard_key              = each.value.shard_key
+  throughput             = each.value.max_throughput == null ? each.value.throughput : null
+  default_ttl_seconds    = each.value.default_ttl
   analytical_storage_ttl = each.value.analytical_ttl
 
   dynamic "autoscale_settings" {
@@ -189,26 +214,22 @@ resource "azurerm_cosmosdb_mongo_collection" "this" {
     }
   }
 
-  # Default _id index required by MongoDB API
   index {
     keys   = ["_id"]
     unique = true
   }
 }
 
-#--------------------------------------------------------------
-# Private Endpoint
-#--------------------------------------------------------------
 resource "azurerm_private_endpoint" "this" {
   count = var.enable_private_endpoint && var.private_endpoint_subnet_id != null ? 1 : 0
 
-  name                = local.private_endpoint_name
+  name                = "${var.name}-pe"
   location            = var.location
   resource_group_name = var.resource_group_name
   subnet_id           = var.private_endpoint_subnet_id
 
   private_service_connection {
-    name                           = local.private_service_connection_name
+    name                           = "${var.name}-psc"
     private_connection_resource_id = azurerm_cosmosdb_account.this.id
     is_manual_connection           = false
     subresource_names              = var.kind == "MongoDB" ? ["MongoDB"] : ["Sql"]
@@ -217,7 +238,7 @@ resource "azurerm_private_endpoint" "this" {
   dynamic "private_dns_zone_group" {
     for_each = var.private_dns_zone_id != null ? [1] : []
     content {
-      name                 = local.private_dns_zone_group_name
+      name                 = "${var.name}-dns-zone-group"
       private_dns_zone_ids = [var.private_dns_zone_id]
     }
   }
@@ -225,14 +246,12 @@ resource "azurerm_private_endpoint" "this" {
   tags = var.tags
 }
 
-#--------------------------------------------------------------
-# Diagnostic Setting
-#--------------------------------------------------------------
 resource "azurerm_monitor_diagnostic_setting" "this" {
-  count = 0 # Enable by providing a log_analytics_workspace_id variable
+  count = var.log_analytics_workspace_id != null ? 1 : 0
 
-  name               = local.diagnostic_setting_name
-  target_resource_id = azurerm_cosmosdb_account.this.id
+  name                       = "${var.name}-diag"
+  target_resource_id         = azurerm_cosmosdb_account.this.id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
 
   enabled_log {
     category = "DataPlaneRequests"
