@@ -5,10 +5,11 @@ resource "azurerm_cosmosdb_account" "this" {
   offer_type          = var.offer_type
   kind                = var.kind
 
-  enable_automatic_failover       = var.enable_automatic_failover
-  enable_multiple_write_locations = var.enable_multi_region_writes
-  enable_free_tier                = var.enable_free_tier
-  ip_range_filter                 = var.ip_range_filter
+  automatic_failover_enabled       = var.enable_automatic_failover
+  multiple_write_locations_enabled = var.enable_multi_region_writes
+  free_tier_enabled                = var.enable_free_tier
+  # Variable stays a comma-separated string; the provider takes a set of strings.
+  ip_range_filter = var.ip_range_filter != null ? toset([for ip in split(",", var.ip_range_filter) : trimspace(ip) if trimspace(ip) != ""]) : null
 
   consistency_policy {
     consistency_level       = var.consistency_policy.level
@@ -112,7 +113,7 @@ resource "azurerm_cosmosdb_sql_container" "this" {
   account_name        = azurerm_cosmosdb_account.this.name
   database_name       = azurerm_cosmosdb_sql_database.this[each.value.db_key].name
 
-  partition_key_path     = each.value.partition_key_path
+  partition_key_paths    = [each.value.partition_key_path]
   partition_key_version  = each.value.partition_key_version
   throughput             = each.value.max_throughput == null ? each.value.throughput : null
   default_ttl            = each.value.default_ttl
@@ -269,8 +270,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
     category = "PartitionKeyRUConsumption"
   }
 
-  metric {
+  enabled_metric {
     category = "Requests"
-    enabled  = true
   }
 }

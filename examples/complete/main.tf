@@ -27,10 +27,9 @@ resource "azurerm_private_dns_zone" "sql" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "sql" {
-  name                  = "cosmosdb-sql-dns-link"
-  resource_group_name   = azurerm_resource_group.example.name
-  private_dns_zone_name = azurerm_private_dns_zone.sql.name
-  virtual_network_id    = azurerm_virtual_network.example.id
+  name                = "cosmosdb-sql-dns-link"
+  private_dns_zone_id = azurerm_private_dns_zone.sql.id
+  virtual_network_id  = azurerm_virtual_network.example.id
 }
 
 #--------------------------------------------------------------
@@ -130,10 +129,9 @@ resource "azurerm_private_dns_zone" "mongo" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "mongo" {
-  name                  = "cosmosdb-mongo-dns-link"
-  resource_group_name   = azurerm_resource_group.example.name
-  private_dns_zone_name = azurerm_private_dns_zone.mongo.name
-  virtual_network_id    = azurerm_virtual_network.example.id
+  name                = "cosmosdb-mongo-dns-link"
+  private_dns_zone_id = azurerm_private_dns_zone.mongo.id
+  virtual_network_id  = azurerm_virtual_network.example.id
 }
 
 module "cosmosdb_mongo" {

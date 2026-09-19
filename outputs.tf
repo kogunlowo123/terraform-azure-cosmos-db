@@ -42,9 +42,14 @@ output "cosmosdb_account_primary_readonly_key" {
 }
 
 output "cosmosdb_account_connection_strings" {
-  description = "The connection strings of the Cosmos DB account."
-  value       = azurerm_cosmosdb_account.this.connection_strings
-  sensitive   = true
+  description = "The SQL connection strings of the Cosmos DB account, in order: primary, secondary, primary read-only, secondary read-only."
+  value = [
+    azurerm_cosmosdb_account.this.primary_sql_connection_string,
+    azurerm_cosmosdb_account.this.secondary_sql_connection_string,
+    azurerm_cosmosdb_account.this.primary_readonly_sql_connection_string,
+    azurerm_cosmosdb_account.this.secondary_readonly_sql_connection_string,
+  ]
+  sensitive = true
 }
 
 output "sql_database_ids" {
