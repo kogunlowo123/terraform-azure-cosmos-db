@@ -87,7 +87,7 @@ module "cosmosdb" {
   private_endpoint_subnet_id = azurerm_subnet.example.id
   private_dns_zone_id        = azurerm_private_dns_zone.example.id
 
-  backup_type      = "Continuous"
+  backup_type = "Continuous"
 
   tags = {
     Environment = "staging"

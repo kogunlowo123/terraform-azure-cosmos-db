@@ -110,9 +110,9 @@ module "cosmosdb_sql" {
   private_endpoint_subnet_id = azurerm_subnet.example.id
   private_dns_zone_id        = azurerm_private_dns_zone.sql.id
 
-  backup_type       = "Periodic"
-  backup_interval   = 120
-  backup_retention  = 24
+  backup_type      = "Periodic"
+  backup_interval  = 120
+  backup_retention = 24
 
   tags = {
     Environment = "production"
@@ -166,7 +166,7 @@ module "cosmosdb_mongo" {
       collections = {
         "events" = {
           shard_key      = "eventType"
-          max_throughput  = 4000
+          max_throughput = 4000
           default_ttl    = 604800
           indexes = [
             {

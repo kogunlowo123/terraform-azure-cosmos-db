@@ -5,10 +5,10 @@ resource "azurerm_cosmosdb_account" "this" {
   offer_type          = var.offer_type
   kind                = var.kind
 
-  enable_automatic_failover        = var.enable_automatic_failover
-  enable_multiple_write_locations  = var.enable_multi_region_writes
-  enable_free_tier                 = var.enable_free_tier
-  ip_range_filter                  = var.ip_range_filter
+  enable_automatic_failover       = var.enable_automatic_failover
+  enable_multiple_write_locations = var.enable_multi_region_writes
+  enable_free_tier                = var.enable_free_tier
+  ip_range_filter                 = var.ip_range_filter
 
   consistency_policy {
     consistency_level       = var.consistency_policy.level
@@ -107,15 +107,15 @@ resource "azurerm_cosmosdb_sql_container" "this" {
     ]) : item.key => item
   }
 
-  name                  = each.value.container_key
-  resource_group_name   = var.resource_group_name
-  account_name          = azurerm_cosmosdb_account.this.name
-  database_name         = azurerm_cosmosdb_sql_database.this[each.value.db_key].name
+  name                = each.value.container_key
+  resource_group_name = var.resource_group_name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_sql_database.this[each.value.db_key].name
 
-  partition_key_path    = each.value.partition_key_path
-  partition_key_version = each.value.partition_key_version
-  throughput            = each.value.max_throughput == null ? each.value.throughput : null
-  default_ttl           = each.value.default_ttl
+  partition_key_path     = each.value.partition_key_path
+  partition_key_version  = each.value.partition_key_version
+  throughput             = each.value.max_throughput == null ? each.value.throughput : null
+  default_ttl            = each.value.default_ttl
   analytical_storage_ttl = each.value.analytical_ttl
 
   dynamic "autoscale_settings" {
